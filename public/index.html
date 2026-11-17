@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LeetCode Reminder Admin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Login -->
+  <main id="login-view" class="login" hidden>
+    <form id="login-form" class="card login-card">
+      <h1>LeetCode Reminder</h1>
+      <p class="muted">Admin sign in</p>
+      <label>Username <input name="username" autocomplete="username" required></label>
+      <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn primary" type="submit">Sign in</button>
+      <p id="login-error" class="error" role="alert"></p>
+    </form>
+  </main>
+
+  <!-- App -->
+  <div id="app-view" hidden>
+    <header class="topbar">
+      <div class="brand">LeetCode Reminder</div>
+      <nav id="tabs" class="tabs" aria-label="Sections">
+        <button data-tab="calls" class="active">Voice Calls</button>
+        <button data-tab="students">Students</button>
+        <button data-tab="assignments">Assignments</button>
+        <button data-tab="templates">Call Scripts</button>
+        <button data-tab="schedules">Schedules</button>
+        <button data-tab="announce">Browser Announce</button>
+        <button data-tab="settings">Settings</button>
+        <button data-tab="audit">Audit Log</button>
+      </nav>
+      <div class="topbar-right">
+        <span id="provider-badge" class="badge"></span>
+        <button id="logout" class="btn ghost small">Sign out</button>
+      </div>
+    </header>
+
+    <!-- Voice Call Management -->
+    <section id="tab-calls" class="tab">
+      <div class="section-head">
+        <h2>Voice Call Management</h2>
+        <span id="automation-state" class="badge"></span>
+      </div>
+      <div id="stats" class="stats"></div>
+
+      <div class="toolbar">
+        <button class="btn primary" id="call-pending">Call all pending</button>
+        <button class="btn" id="call-selected">Call selected</button>
+        <button class="btn" id="retry-failed">Retry failed calls</button>
+        <button class="btn" id="stop-scheduled">Stop scheduled calls</button>
+        <button class="btn" id="toggle-automation">Pause automation</button>
+        <button class="btn ghost" id="test-call">Test call</button>
+      </div>
+
+      <div class="filters">
+        <label>Show
+          <select id="call-filter">
+            <option value="all">All students</option>
+            <option value="pending">Pending students</option>
+            <option value="successful">Successful calls</option>
+            <option value="failed">Failed calls</option>
+          </select>
+        </label>
+        <label>Squad <select id="call-squad"><option value="">All squads</option></select></label>
+        <span class="muted small" id="calls-updated"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr>
+            <th><input type="checkbox" id="select-all" aria-label="Select all"></th>
+            <th>Student Name</th><th>Phone</th><th>Problem</th><th>Progress</th>
+            <th>Status</th><th>Call Time</th><th>Duration</th><th>Action</th>
+          </tr></thead>
+          <tbody id="calls-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Students -->
+    <section id="tab-students" class="tab" hidden>
+      <div class="section-head"><h2>Students</h2></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Upload students CSV</h3>
+          <p class="muted small">Columns: <code>name, phone, squad, leetcode_username, email, consent</code>.
+            Existing students are matched by phone and updated. <code>consent</code> = yes / no.</p>
+          <input type="file" id="csv-file" accept=".csv,text/csv">
+          <button class="btn primary" id="csv-upload">Import CSV</button>
+          <pre id="csv-result" class="result small"></pre>
+        </div>
+        <form class="card" id="student-form">
+          <h3>Add student</h3>
+          <div class="form-grid">
+            <label>Name <input name="name" required maxlength="80"></label>
+            <label>Phone <input name="phone" required placeholder="98765 43210"></label>
+            <label>Squad <input name="squad" maxlength="60"></label>
+            <label>LeetCode username <input name="leetcode_username" maxlength="60"></label>
+            <label>Call consent
+              <select name="consent_status"><option value="pending">Pending</option><option value="granted">Granted</option></select>
+            </label>
+          </div>
+          <button class="btn primary" type="submit">Add student</button>
+        </form>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="consent-grant">Mark selected: consent granted</button>
+        <button class="btn" id="consent-revoke">Mark selected: consent revoked</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th><input type="checkbox" id="students-select-all" aria-label="Select all"></th>
+            <th>Name</th><th>Phone</th><th>Squad</th><th>LeetCode</th><th>Consent</th><th>Opted out</th><th></th></tr></thead>
+          <tbody id="students-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Assignments -->
+    <section id="tab-assignments" class="tab" hidden>
+      <div class="section-head"><h2>Assignments</h2></div>
+      <form class="card" id="assignment-form">
+        <h3>Assign a LeetCode problem</h3>
+        <div class="form-grid">
+          <label>Problem title <input name="problem_title" required maxlength="120" placeholder="Two Sum"></label>
+          <label>LeetCode URL or slug <input name="problem_url" placeholder="https://leetcode.com/problems/two-sum/"></label>
+          <label>Difficulty
+            <select name="difficulty"><option>Easy</option><option selected>Medium</option><option>Hard</option></select>
+          </label>
+          <label>Assigned date <input type="date" name="assigned_date" required></label>
+          <label>Deadline date <input type="date" name="deadline_date"></label>
+          <label>Deadline time <input type="time" name="deadline_time" value="23:59" required></label>
+          <label>Squad <select name="squad" id="assignment-squad"><option value="">All students</option></select></label>
+        </div>
+        <label class="check"><input type="checkbox" name="announce_by_call"> Also queue an announcement phone call to every assigned student</label>
+        <button class="btn primary" type="submit">Assign problem</button>
+      </form>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Date</th><th>Problem</th><th>Difficulty</th><th>Squad</th><th>Deadline</th><th>Solved</th><th></th></tr></thead>
+          <tbody id="assignments-body"></tbody>
+        </table>
+      </div>
+      <div class="card" id="progress-panel" hidden>
+        <div class="section-head">
+          <h3 id="progress-title"></h3>
+          <button class="btn" id="progress-sync">Sync from LeetCode</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Student</th><th>Squad</th><th>LeetCode</th><th>Progress</th></tr></thead>
+            <tbody id="progress-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Templates -->
+    <section id="tab-templates" class="tab" hidden>
+      <div class="section-head"><h2>Call Scripts</h2></div>
+      <p class="muted">Placeholders: <span id="placeholders"></span>. Every script must include the student's name.</p>
+      <div id="templates-list" class="stack"></div>
+    </section>
+
+    <!-- Schedules -->
+    <section id="tab-schedules" class="tab" hidden>
+      <div class="section-head"><h2>Automatic Call Schedules</h2></div>
+      <p class="muted">Times are in <span class="tz"></span>. Each schedule runs at most once a day, only within calling hours, never on holidays or while automation is paused.
+        Students who already solved the problem are never called.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Name</th><th>Time</th><th>Days</th><th>Script</th><th>Who</th><th>Enabled</th><th>Last run</th><th></th></tr></thead>
+          <tbody id="schedules-body"></tbody>
+        </table>
+      </div>
+      <form class="card" id="schedule-form">
+        <h3>Add schedule</h3>
+        <div class="form-grid">
+          <label>Name <input name="name" required maxlength="80"></label>
+          <label>Time <input type="time" name="time_of_day" required></label>
+          <label>Script <select name="template_type" class="template-select"></select></label>
+          <label>Who to call
+            <select name="audience">
+              <option value="unsolved">Not solved today's problem</option>
+              <option value="not_started">Haven't started</option>
+              <option value="overdue">Overdue (deadline passed)</option>
+            </select>
+          </label>
+        </div>
+        <div class="days" id="schedule-days"></div>
+        <button class="btn primary" type="submit">Add schedule</button>
+      </form>
+      <div class="card">
+        <h3>Holidays (no automatic calls)</h3>
+        <form id="holiday-form" class="inline-form">
+          <input type="date" name="date" required>
+          <input name="reason" placeholder="Reason (optional)" maxlength="120">
+          <button class="btn" type="submit">Add holiday</button>
+        </form>
+        <ul id="holidays-list" class="plain-list"></ul>
+      </div>
+    </section>
+
+    <!-- Browser announcements -->
+    <section id="tab-announce" class="tab" hidden>
+      <div class="section-head"><h2>Browser Announcements</h2><span class="badge free">Free</span></div>
+      <div class="notice">
+        <strong>This is not a phone call.</strong> Announcements are spoken by this browser through this computer's speakers
+        (Web Speech API). Nothing is sent to students' phones and no telephony provider is used.
+      </div>
+      <div class="filters">
+        <label>Squad <select id="announce-squad"><option value="">All squads</option></select></label>
+        <label>Voice <select id="announce-voice"></select></label>
+        <label>Speed <input type="range" id="announce-rate" min="0.5" max="1.6" step="0.1" value="0.9"> <span id="announce-rate-val">0.9</span>x</label>
+        <label>Phrase
+          <select id="announce-format">
+            <option value="short">"Rahul, complete Two Sum."</option>
+            <option value="long">"Rahul, your problem Two Sum is still pending. Please complete it today."</option>
+          </select>
+        </label>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="announce-play">Play selected</button>
+        <button class="btn" id="announce-pause">Pause</button>
+        <button class="btn" id="announce-resume">Resume</button>
+        <button class="btn" id="announce-stop">Stop</button>
+        <button class="btn ghost" id="announce-reload">Reload pending list</button>
+        <span id="announce-status" class="muted small"></span>
+      </div>
+      <p id="announce-unsupported" class="error" hidden>Your browser does not support speech synthesis.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th><input type="checkbox" id="announce-all" checked aria-label="Select all"></th><th>Student</th><th>Squad</th><th>Problem</th><th>Difficulty</th></tr></thead>
+          <tbody id="announce-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="tab-settings" class="tab" hidden>
+      <div class="section-head"><h2>Calling Settings</h2></div>
+      <div class="notice">
+        Real phone calls through Twilio or Exotel are <strong>paid</strong> and need a verified caller ID / KYC with the provider.
+        The <strong>mock</strong> provider never dials anyone; use it for development. Provider credentials are read from
+        server environment variables only and are never shown here.
+      </div>
+      <div id="provider-status" class="stats"></div>
+      <form class="card" id="settings-form">
+        <div class="form-grid">
+          <label>Active provider <select name="active_provider"></select></label>
+          <label>Calling hours start <input type="time" name="calling_hours_start" required></label>
+          <label>Calling hours end <input type="time" name="calling_hours_end" required></label>
+          <label>Max simultaneous calls <input type="number" name="max_concurrent_calls" min="1" max="20" required></label>
+          <label>Max calls per minute <input type="number" name="calls_per_minute" min="1" max="120" required></label>
+          <label>Max attempts per call <input type="number" name="max_attempts" min="1" max="6" required></label>
+          <label>Retry base delay (seconds) <input type="number" name="retry_base_seconds" min="30" max="86400" required></label>
+          <label>Min minutes between automated calls to a student <input type="number" name="min_minutes_between_calls" min="0" max="1440" required></label>
+          <label>Schedule grace window (minutes) <input type="number" name="schedule_grace_minutes" min="1" max="600" required></label>
+          <label>Give up on silent calls after (minutes) <input type="number" name="stale_call_minutes" min="2" max="240" required></label>
+          <label>Overdue lookback (days) <input type="number" name="overdue_lookback_days" min="1" max="30" required></label>
+        </div>
+        <fieldset>
+          <legend>Retry when the call ends as</legend>
+          <label class="check"><input type="checkbox" name="retry_no_answer"> No answer</label>
+          <label class="check"><input type="checkbox" name="retry_busy"> Busy</label>
+          <label class="check"><input type="checkbox" name="retry_failed"> Failed</label>
+        </fieldset>
+        <label class="check"><input type="checkbox" name="require_consent"> Only call students whose consent is recorded as granted</label>
+        <label class="check"><input type="checkbox" name="opt_out_prompt_enabled"> Offer "press 9 to stop these calls" (Twilio, needs PUBLIC_BASE_URL)</label>
+        <label class="check"><input type="checkbox" name="leetcode_sync_enabled"> Check LeetCode for solved problems before each scheduled run</label>
+        <button class="btn primary" type="submit">Save settings</button>
+        <p id="settings-msg" class="small"></p>
+      </form>
+    </section>
+
+    <!-- Audit -->
+    <section id="tab-audit" class="tab" hidden>
+      <div class="section-head"><h2>Audit Log</h2></div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody id="audit-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="modal-cancel">Cancel</button>
+        <button class="btn primary" id="modal-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

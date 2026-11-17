@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+
+# environment & secrets
+.env
+.env.*
+!.env.example
+
+# local data / databases
+data/*
+!data/.gitkeep
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# logs & debug output
+logs/
+*.log
+npm-debug.log*
+
+# caches / OS / editor
+.cache/
+coverage/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# AI assistant traces & scratch notes
+.claude/
+CLAUDE.md
+*.ai-notes.md
+scratch/

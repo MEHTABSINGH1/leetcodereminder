@@ -1,0 +1,22 @@
+{
+  "name": "leetcode-reminder",
+  "version": "1.0.0",
+  "description": "LeetCode student reminder system with automated personalized voice calls (Twilio / Exotel) and browser announcements.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "private": true,
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "check": "node scripts/check.js",
+    "hash-password": "node scripts/hash-password.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "license": "MIT"
+}
