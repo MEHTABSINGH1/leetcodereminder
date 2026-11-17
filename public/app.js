@@ -431,10 +431,20 @@ $('#consent-grant').addEventListener('click', () => bulkConsent('granted'));
 $('#consent-revoke').addEventListener('click', () => bulkConsent('revoked'));
 $('#csv-upload').addEventListener('click', async () => {
   const file = $('#csv-file').files[0];
-  if (!file) return toast('Choose a CSV file first');
-  if (file.size > 2_000_000) return toast('CSV is too large (max 2 MB)');
+  if (!file) return toast('Choose a CSV or Excel file first');
+  const name = file.name.toLowerCase();
+  const isXlsx = name.endsWith('.xlsx');
+  if (name.endsWith('.xls')) return toast('Old .xls files are not supported — save as .xlsx or .csv', 6000);
+  if (file.size > (isXlsx ? 5_000_000 : 2_000_000)) return toast(`File is too large (max ${isXlsx ? 5 : 2} MB)`);
   try {
-    const r = await api('/students/import', { method: 'POST', body: { csv: await file.text() } });
+    let body;
+    if (isXlsx) {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      body = { xlsx: btoa(bin) };
+    } else body = { csv: await file.text() };
+    const r = await api('/students/import', { method: 'POST', body });
     $('#csv-result').textContent =
       `Created: ${r.created}   Updated: ${r.updated}   Skipped: ${r.skipped}` + (r.errors.length ? '\n' + r.errors.map((e) => `Line ${e.line} (${e.name}): ${e.error}`).join('\n') : '');
     loadStudents();

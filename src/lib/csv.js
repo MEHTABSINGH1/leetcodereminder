@@ -46,8 +46,15 @@ const HEADER_ALIASES = {
 
 /** Parse a student CSV into objects keyed by canonical column names. */
 function parseStudentCsv(text) {
-  const rows = parseCsv(text);
-  if (!rows.length) return { records: [], errors: ['CSV is empty'] };
+  return parseStudentRows(parseCsv(text));
+}
+
+/** Map a 2-D array of cells (from CSV or a spreadsheet) to student records. */
+function parseStudentRows(rawRows) {
+  const rows = rawRows
+    .map((r) => r.map((v) => String(v ?? '')))
+    .filter((r) => r.some((v) => v.trim() !== ''));
+  if (!rows.length) return { records: [], errors: ['File is empty'] };
   const header = rows[0].map((h) => h.trim().toLowerCase().replace(/[\s-]+/g, '_'));
   const index = {};
   for (const [key, aliases] of Object.entries(HEADER_ALIASES)) {
@@ -55,8 +62,8 @@ function parseStudentCsv(text) {
     if (i >= 0) index[key] = i;
   }
   const errors = [];
-  if (index.name === undefined) errors.push('CSV must contain a "name" column');
-  if (index.phone === undefined) errors.push('CSV must contain a "phone" column');
+  if (index.name === undefined) errors.push('File must contain a "name" column');
+  if (index.phone === undefined) errors.push('File must contain a "phone" column');
   if (errors.length) return { records: [], errors };
   const records = rows.slice(1).map((r, i) => {
     const rec = { line: i + 2 };
@@ -66,4 +73,4 @@ function parseStudentCsv(text) {
   return { records, errors };
 }
 
-module.exports = { parseCsv, parseStudentCsv };
+module.exports = { parseCsv, parseStudentCsv, parseStudentRows };

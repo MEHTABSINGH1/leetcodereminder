@@ -21,7 +21,7 @@ computer's speakers, so no telephony provider is needed.
 
 | Area | What you get |
 |---|---|
-| Students | CSV import (re-imports update by phone number), squads, LeetCode usernames, Indian mobile validation (normalised to `+91…`) |
+| Students | CSV or Excel (.xlsx) import (re-imports update by phone number), squads, LeetCode usernames, Indian mobile validation (normalised to `+91…`) |
 | Assignments | Assign a problem per day, either to everyone or to one squad. Track progress per student (not started / attempted / solved) manually or by syncing from LeetCode |
 | Personalised calls | Five editable scripts: first reminder, pending, final deadline, overdue, assignment announcement. Placeholders: `{student_name}`, `{first_name}`, `{problem_title}`, `{difficulty}`, `{deadline}`, `{mentor_name}`, `{squad}` |
 | Scheduling | Configurable times, weekdays, scripts and target groups. Defaults: 10:00 everyone unsolved, 16:00 not started, 20:00 unsolved, 22:00 final reminder. Holidays, pause/resume, calling-hours window |
@@ -47,7 +47,7 @@ npm start
 
 Open http://localhost:3000 and sign in. Then:
 
-1. **Students**: upload a CSV (see [`docs/students.sample.csv`](docs/students.sample.csv)).
+1. **Students**: upload a CSV or Excel `.xlsx` file (see [`docs/students.sample.csv`](docs/students.sample.csv) or [`docs/students.sample.xlsx`](docs/students.sample.xlsx)).
 2. Record consent. Students are only called once their consent is `granted`. Use the `consent` CSV column (`yes`/`no`) or the bulk buttons.
 3. **Assignments**: assign today's problem (title plus LeetCode URL).
 4. **Voice Calls**: watch the dashboard. Scheduled calls run automatically, or click *Call all pending*.
@@ -55,7 +55,7 @@ Open http://localhost:3000 and sign in. Then:
 With `CALL_PROVIDER=mock` everything works end to end, but calls are simulated. Set
 `MOCK_CALL_OUTCOME=random` to see no-answers, busy signals and retries.
 
-### CSV format
+### Student file format (CSV or Excel)
 
 ```csv
 name,phone,squad,leetcode_username,email,consent
@@ -63,6 +63,9 @@ Rahul Sharma,9876543210,Alpha,rahul_codes,rahul@example.com,yes
 ```
 
 Only `name` and `phone` are required. Header aliases work too (`mobile`, `student_name`, `group`, …).
+For Excel, the first worksheet is read; phone numbers stored as numbers are handled. Old binary `.xls`
+files are not supported, so save them as `.xlsx` or `.csv`. The reader is built in (no third-party
+spreadsheet library) and enforces size limits (5 MB file, 5,000 rows).
 Rows with invalid phone numbers are skipped and reported by line number.
 
 ## Configuring a real calling provider
@@ -170,7 +173,7 @@ SQLite (WAL mode) at `DATABASE_URL=sqlite:./data/leetcode-reminder.db`. Migratio
 ## Testing
 
 ```bash
-npm test        # 33 tests, all on the mock provider + in-memory DB - never dials anyone
+npm test        # 36 tests, all on the mock provider + in-memory DB - never dials anyone
 npm run check   # syntax check, secret scan, boot check
 ```
 

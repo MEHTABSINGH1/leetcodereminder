@@ -1,7 +1,8 @@
 'use strict';
 
 const { normalizePhone } = require('../lib/phone');
-const { parseStudentCsv } = require('../lib/csv');
+const { parseStudentCsv, parseStudentRows } = require('../lib/csv');
+const { readXlsxRows, XlsxError } = require('../lib/xlsx');
 const { transaction } = require('../db');
 const { httpError } = require('./settings');
 
@@ -171,7 +172,22 @@ function createStudentService(db) {
 
     /** Upsert students from CSV text, matching existing students by phone. */
     importCsv(text, actor = 'admin') {
-      const { records, errors } = parseStudentCsv(text);
+      return service.importParsed(parseStudentCsv(text), actor);
+    },
+
+    /** Import the first worksheet of an .xlsx file (same columns as the CSV). */
+    importXlsx(buffer, actor = 'admin') {
+      let rows;
+      try {
+        rows = readXlsxRows(buffer);
+      } catch (e) {
+        if (e instanceof XlsxError) throw httpError(400, e.message);
+        throw e;
+      }
+      return service.importParsed(parseStudentRows(rows), actor);
+    },
+
+    importParsed({ records, errors }, actor = 'admin') {
       if (errors.length) throw httpError(400, errors.join('; '));
       const result = { created: 0, updated: 0, skipped: 0, errors: [] };
       transaction(db, () => {

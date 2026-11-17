@@ -41,12 +41,24 @@ function createApiRouter(ctx) {
     log(req, 'student_remove', { studentId: Number(req.params.id) });
     res.status(204).end();
   });
+  /** Import students from CSV text ({ csv }) or an Excel workbook ({ xlsx: base64 }). */
   r.post('/students/import', (req, res) => {
-    const csv = req.body && req.body.csv;
-    if (typeof csv !== 'string' || !csv.trim()) throw httpError(400, 'Provide CSV text in "csv"');
-    if (csv.length > 2_000_000) throw httpError(413, 'CSV too large');
-    const result = students.importCsv(csv, actor(req));
-    log(req, 'students_import', { created: result.created, updated: result.updated, skipped: result.skipped });
+    const { csv, xlsx } = req.body || {};
+    let result;
+    let format;
+    if (typeof xlsx === 'string' && xlsx) {
+      if (xlsx.length > 7_000_000) throw httpError(413, 'Spreadsheet too large (max 5 MB)');
+      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(xlsx)) throw httpError(400, 'Invalid file encoding');
+      format = 'xlsx';
+      result = students.importXlsx(Buffer.from(xlsx, 'base64'), actor(req));
+    } else if (typeof csv === 'string' && csv.trim()) {
+      if (csv.length > 2_000_000) throw httpError(413, 'CSV too large');
+      format = 'csv';
+      result = students.importCsv(csv, actor(req));
+    } else {
+      throw httpError(400, 'Provide a CSV ("csv") or Excel file ("xlsx", base64)');
+    }
+    log(req, 'students_import', { format, created: result.created, updated: result.updated, skipped: result.skipped });
     res.json(result);
   });
   r.put('/students/:id/preferences', (req, res) => {

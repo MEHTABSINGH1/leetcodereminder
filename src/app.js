@@ -60,7 +60,7 @@ function createApplication(config, opts = {}) {
 
   app.get('/healthz', (req, res) => res.json({ ok: true }));
   app.use('/webhooks', createWebhookRouter(ctx));
-  app.use('/api', express.json({ limit: '3mb' }), createApiRouter(ctx));
+  app.use('/api', express.json({ limit: '8mb' }), createApiRouter(ctx));
   app.use(express.static(path.join(config.root, 'public'), { index: 'index.html' }));
 
   // eslint-disable-next-line no-unused-vars

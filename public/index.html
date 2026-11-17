@@ -86,11 +86,12 @@
       <div class="section-head"><h2>Students</h2></div>
       <div class="grid-2">
         <div class="card">
-          <h3>Upload students CSV</h3>
-          <p class="muted small">Columns: <code>name, phone, squad, leetcode_username, email, consent</code>.
+          <h3>Upload students (CSV or Excel)</h3>
+          <p class="muted small">Accepts <code>.csv</code> or <code>.xlsx</code> (first sheet is read). Columns:
+            <code>name, phone, squad, leetcode_username, email, consent</code>.
             Existing students are matched by phone and updated. <code>consent</code> = yes / no.</p>
-          <input type="file" id="csv-file" accept=".csv,text/csv">
-          <button class="btn primary" id="csv-upload">Import CSV</button>
+          <input type="file" id="csv-file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+          <button class="btn primary" id="csv-upload">Import students</button>
           <pre id="csv-result" class="result small"></pre>
         </div>
         <form class="card" id="student-form">
